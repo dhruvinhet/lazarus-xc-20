@@ -1,0 +1,17 @@
+{
+ "v": 1,
+ "source": "BinSentry/joi-siren",
+ "sha": "a87b8c83afe1147ec6557a5c0ba6b17d0aabbd49",
+ "commit_date": "2018-08-25T23:32:16-04:00",
+ "github_detected_spdx": "MIT",
+ "accepted": true,
+ "reasons": [],
+ "license_file": "LICENSE",
+ "license_sha256": "7be24ef71faad6b0bb6cbb9cbc3e53d48e896bf8730471225a69a06dba264ab9",
+ "license_bytes": 1066,
+ "copyright_lines": [
+  "Copyright (c) 2018 BinSentry"
+ ],
+ "package_json_license": "MIT",
+ "notice_files": []
+}
