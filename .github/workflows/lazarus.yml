@@ -1,0 +1,224 @@
+# EXPERIMENT BUILD for XA v2 and XC. Not yet run on GitHub in this form.
+# TRUST RULE: no file, script, package, test or hook that comes from the subject project is ever executed on the runner.
+# Subject code runs only inside the restricted container, started by tools/run-sandbox.sh. The runner host executes only
+# trusted tools from this repository's own branch, and treats everything the container wrote as data (tools/sanitize-out.js).
+name: Lazarus
+on:
+  workflow_dispatch:
+    inputs:
+      ticket:
+        description: "owner/repo#jobid"
+        required: true
+        type: string
+      sandbox_probe:
+        description: "XA only: also run the trusted sandbox probe in the container (set by the owner at dispatch; never read from the project)"
+        required: false
+        default: false
+        type: boolean
+permissions: {}
+concurrency:
+  group: lazarus-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  # Target runtime: Node.js 26 (Active LTS since 2026-10-28). The first image that can be pulled is used and recorded.
+  NODE_IMAGE_CANDIDATES: node:26-bookworm-slim node:26-slim
+jobs:
+  intake:
+    name: intake (trusted - runs no project code)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      source: ${{ steps.parse.outputs.source }}
+      job: ${{ steps.parse.outputs.job }}
+      sha: ${{ steps.snap.outputs.sha }}
+    steps:
+      - id: parse
+        env:
+          TICKET: ${{ inputs.ticket }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$TICKET" =~ ^([A-Za-z0-9][A-Za-z0-9-]{0,38}/[A-Za-z0-9_][A-Za-z0-9_.-]{0,99})#([a-f0-9]{16,64})$ ]]; then
+            echo "::error::ticket must look like owner/repo#<16-64 hex characters>"; exit 1
+          fi
+          echo "source=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          echo "job=${BASH_REMATCH[2]}" >> "$GITHUB_OUTPUT"
+      - id: snap
+        env:
+          SOURCE: ${{ steps.parse.outputs.source }}
+          JOB: ${{ steps.parse.outputs.job }}
+          GH_TOKEN: ${{ github.token }}
+          GIT_LFS_SKIP_SMUDGE: "1"
+          GIT_TERMINAL_PROMPT: "0"
+        run: |
+          set -euo pipefail
+          SAFE=(-c core.hooksPath=/dev/null -c core.symlinks=false -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false)
+          if git ls-remote --exit-code "https://github.com/${GITHUB_REPOSITORY}.git" "refs/heads/subject-${JOB}" >/dev/null 2>&1; then
+            echo "::error::job id already used in this repository"; exit 1
+          fi
+          git "${SAFE[@]}" clone --quiet --depth 1 --no-recurse-submodules "https://github.com/${SOURCE}.git" src
+          # Pin trusted tool code to the exact commit that triggered this run (GITHUB_SHA), never to the current tip of a
+          # branch (GITHUB_REF_NAME): the branch may have advanced since dispatch. Fail closed if the exact commit cannot
+          # be fetched or does not match after checkout.
+          git init -q trusted
+          git -C trusted remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git -C trusted "${SAFE[@]}" fetch -q --depth 1 origin "${GITHUB_SHA}"
+          git -C trusted "${SAFE[@]}" checkout -q FETCH_HEAD
+          TRUSTED_SHA=$(git -C trusted rev-parse HEAD)
+          if [ "$TRUSTED_SHA" != "${GITHUB_SHA}" ]; then echo "::error::trusted tools resolved to $TRUSTED_SHA, not the triggering commit ${GITHUB_SHA}"; exit 1; fi
+          SHA=$(git -C src rev-parse HEAD)
+          DATE=$(git -C src log -1 --format=%cI)
+          rm -rf src/.git src/.github src/.gitmodules
+          LINKS=$(find src -type l | wc -l)
+          find src -type l -delete
+          SIZE=$(du -sm src | cut -f1)
+          if [ "$SIZE" -gt 200 ]; then echo "::error::source is larger than 200 MB"; exit 1; fi
+          # License gate. GitHub's detector reads the license text; the trusted checker re-reads the text itself.
+          # Nothing is published unless both agree on a supported license.
+          SPDX=""
+          for i in 1 2 3 4 5 6; do
+            SPDX=$(gh api "repos/${SOURCE}/license" -q .license.spdx_id 2>/dev/null || true)
+            if [ -n "$SPDX" ]; then break; fi; sleep 10
+          done
+          mkdir snap
+          if ! node trusted/tools/license-check.js src "${SPDX:-NONE}" "$SOURCE" "$SHA" "$DATE" "$LINKS" snap; then
+            echo "::error::license policy refused this source; nothing was published"; cat snap/license-decision.json || true; exit 1
+          fi
+          mv src snap/subject
+          cd snap
+          git init -q -b "subject-${JOB}"
+          git "${SAFE[@]}" add -A
+          git "${SAFE[@]}" -c user.name=lazarus -c user.email=lazarus@users.noreply.github.com commit -q -m "Snapshot of ${SOURCE}@${SHA}"
+          git "${SAFE[@]}" push -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "subject-${JOB}"
+          echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
+
+  examine:
+    name: examine (HOSTILE ZONE - no permissions, no secrets, no environment)
+    needs: intake
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions: {}
+    env:
+      JOB: ${{ needs.intake.outputs.job }}
+    steps:
+      - name: Fetch snapshot and tools anonymously (no checkout action, no token on disk)
+        env:
+          GIT_TERMINAL_PROMPT: "0"
+        run: |
+          set -euo pipefail
+          git clone -q --depth 1 --branch "subject-${JOB}" "https://github.com/${GITHUB_REPOSITORY}.git" snap
+          # Same SHA pin as the intake job: the hostile zone must run the trusted tools exactly as they were at dispatch time.
+          git init -q trusted
+          git -C trusted remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git -C trusted fetch -q --depth 1 origin "${GITHUB_SHA}"
+          git -C trusted checkout -q FETCH_HEAD
+          TRUSTED_SHA=$(git -C trusted rev-parse HEAD)
+          if [ "$TRUSTED_SHA" != "${GITHUB_SHA}" ]; then echo "::error::trusted tools resolved to $TRUSTED_SHA, not the triggering commit ${GITHUB_SHA}"; exit 1; fi
+          rm -rf snap/.git
+          # out   = the ONLY directory the container may write (mounted). meta = host-only files, never mounted. clean = what gets uploaded.
+          mkdir -p out meta clean && chmod 777 out
+          NODE_IMAGE=""
+          for img in $NODE_IMAGE_CANDIDATES; do if docker pull -q "$img"; then NODE_IMAGE="$img"; break; fi; done
+          if [ -z "$NODE_IMAGE" ]; then echo "::error::no Node.js 26 image could be pulled"; exit 1; fi
+          echo "NODE_IMAGE=$NODE_IMAGE" >> "$GITHUB_ENV"
+          echo "$NODE_IMAGE" > meta/node-image.txt
+          docker image inspect --format '{{index .RepoDigests 0}}' "$NODE_IMAGE" > meta/node-image-digest.txt
+          docker --version > meta/docker-version.txt
+      - name: Project code inside the container
+        run: |
+          bash trusted/tools/run-sandbox.sh "$NODE_IMAGE" lazarus-subject historical.js meta/container.log subject container-exit.json
+          # container output is untrusted text: neutralise workflow-command syntax before it reaches the Actions log
+          tail -n 40 meta/container.log | sed 's/::/: :/g'
+      - name: Sandbox probe (trusted tool, same container restrictions)
+        if: ${{ inputs.sandbox_probe }}
+        run: |
+          bash trusted/tools/run-sandbox.sh "$NODE_IMAGE" lazarus-probe sandbox-probe.js meta/probe-container.log probe probe-exit.json
+          tail -n 10 meta/probe-container.log | sed 's/::/: :/g'
+      - name: Validate and admit the trusted sandbox-probe report
+        if: ${{ always() && inputs.sandbox_probe }}
+        run: node trusted/tools/validate-probe.js probe-out probe-exit.json meta
+      - name: Remove containers and probe scratch directory
+        if: always()
+        run: |
+          docker rm -f lazarus-subject lazarus-probe > /dev/null 2>&1 || true
+          rm -rf probe-out
+      - name: Sanitize container output (trusted tool, subject output treated as data)
+        if: always()
+        run: node trusted/tools/sanitize-out.js sanitize --in out --meta meta --out clean
+      - name: Upload sanitized output
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: out-${{ needs.intake.outputs.job }}
+          path: clean
+          if-no-files-found: error
+          retention-days: 1
+
+  deliver:
+    name: deliver (trusted - runs no project code)
+    needs: [intake, examine]
+    if: ${{ always() && needs.intake.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      JOB: ${{ needs.intake.outputs.job }}
+      SOURCE: ${{ needs.intake.outputs.source }}
+      SHA: ${{ needs.intake.outputs.sha }}
+      EXAMINE_RESULT: ${{ needs.examine.result }}
+      GH_TOKEN: ${{ github.token }}
+      GIT_TERMINAL_PROMPT: "0"
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        continue-on-error: true
+        with:
+          name: out-${{ needs.intake.outputs.job }}
+          path: in
+      - name: Validate the untrusted artifact as data and publish it
+        run: |
+          set -euo pipefail
+          SAFE=(-c core.hooksPath=/dev/null -c core.symlinks=false)
+          mkdir -p in
+          if [ -n "$(find in -type l)" ]; then echo "::error::artifact contains symbolic links"; exit 1; fi
+          if [ -n "$(find in -mindepth 1 ! -type d ! -type f)" ]; then echo "::error::artifact contains special files"; exit 1; fi
+          if find in -mindepth 1 | grep -qvE '^in/[A-Za-z0-9._-]+$'; then echo "::error::unexpected artifact path"; exit 1; fi
+          if [ "$(du -sk in | cut -f1)" -gt 5120 ]; then echo "::error::artifact larger than 5 MB"; exit 1; fi
+          # Re-verify with the trusted tool: allowlisted names, regular single-link files, sizes, and SHA-256 against the sanitizer's report.
+          # Pinned to GITHUB_SHA, same as intake and examine: delivery must not trust whatever the branch head happens to be by now.
+          git init -q trusted
+          git -C trusted remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git -C trusted "${SAFE[@]}" fetch -q --depth 1 origin "${GITHUB_SHA}"
+          git -C trusted "${SAFE[@]}" checkout -q FETCH_HEAD
+          TRUSTED_SHA=$(git -C trusted rev-parse HEAD)
+          if [ "$TRUSTED_SHA" != "${GITHUB_SHA}" ]; then echo "::error::trusted tools resolved to $TRUSTED_SHA, not the triggering commit ${GITHUB_SHA}"; exit 1; fi
+          if [ -n "$(ls -A in)" ]; then node trusted/tools/sanitize-out.js verify --dir in; fi
+          URL="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git ls-remote --exit-code "$URL" refs/heads/lazarus-result >/dev/null 2>&1; then
+            git "${SAFE[@]}" clone -q --depth 1 --branch lazarus-result "$URL" res
+          else
+            mkdir res && git -C res init -q -b lazarus-result
+          fi
+          if [ -e "res/results/${JOB}" ]; then echo "::error::results for this job already exist; refusing to overwrite"; exit 1; fi
+          mkdir -p "res/results/${JOB}/raw"
+          cp in/* "res/results/${JOB}/raw/" 2>/dev/null || true
+          chmod -R a-x+X "res/results/${JOB}"
+          printf '{"v":0,"job":"%s","source":"%s","source_sha":"%s","examine_result":"%s","run_id":"%s","run_attempt":"%s","workflow_sha":"%s","repository":"%s"}\n' \
+            "$JOB" "$SOURCE" "$SHA" "$EXAMINE_RESULT" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$GITHUB_REPOSITORY" > "res/results/${JOB}/report.json"
+          cd res
+          git "${SAFE[@]}" add -A results
+          git "${SAFE[@]}" -c user.name=lazarus -c user.email=lazarus@users.noreply.github.com commit -q -m "Result for job ${JOB}"
+          git "${SAFE[@]}" push -q "$URL" lazarus-result
+
+  ai-probe:
+    name: ai-probe (XA only - is the environment secret released to this job?)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: lazarus-ai
+    permissions: {}
+    steps:
+      - env:
+          K: ${{ secrets.LAZARUS_AI_KEY }}
+        run: |
+          if [ -n "$K" ]; then echo "AI-PROBE secret-present length=${#K}"; else echo "AI-PROBE secret-absent"; fi
