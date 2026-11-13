@@ -1,0 +1,8 @@
+$ npm install --ignore-scripts --no-audit --no-fund --loglevel=error --before="2018-08-25T23:32:16-04:00"
+[exit 0 signal  1440ms]
+--- stdout
+
+added 36 packages in 1s
+
+--- stderr
+

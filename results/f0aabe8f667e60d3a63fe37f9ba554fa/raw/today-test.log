@@ -1,0 +1,23 @@
+$ NODE_ENV=test mocha --opts .mocha.opts
+[exit 0 signal  114ms]
+--- stdout
+
+
+  joi-siren
+    ✓ converts a single text field
+    ✓ converts numbers
+    ✓ converts booleans
+    ✓ converts multiple fields
+    ✓ converts nested fields
+    ✓ converts nested fanout
+    ✓ converts varying levels of nesting
+    ✓ converts a single field with description
+    ✓ converts a field with an exact value
+    ✓ errors if root of schema is not an object
+
+
+  10 passing (7ms)
+
+
+--- stderr
+

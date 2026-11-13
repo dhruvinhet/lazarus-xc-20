@@ -1,0 +1,105 @@
+{
+ "v": 1,
+ "started": "2026-11-13T15:19:24.536Z",
+ "target_runtime": "v26.13.1",
+ "target_major_expected": 26,
+ "target_is_expected": true,
+ "steps": [
+  {
+   "name": "install-asof",
+   "exit": 0,
+   "ms": 1440
+  },
+  {
+   "name": "historical-test-1",
+   "exit": 0,
+   "ms": 155
+  },
+  {
+   "name": "historical-mocha-json-1",
+   "exit": 0,
+   "ms": 148
+  },
+  {
+   "name": "historical-test-2",
+   "exit": 0,
+   "ms": 149
+  },
+  {
+   "name": "historical-mocha-json-2",
+   "exit": 0,
+   "ms": 147
+  },
+  {
+   "name": "today-install",
+   "exit": 0,
+   "ms": 508
+  },
+  {
+   "name": "today-test",
+   "exit": 0,
+   "ms": 114
+  }
+ ],
+ "source": {
+  "source": "BinSentry/joi-siren",
+  "sha": "a87b8c83afe1147ec6557a5c0ba6b17d0aabbd49",
+  "commit_date": "2018-08-25T23:32:16-04:00",
+  "symlinks_removed": 0,
+  "spdx": "MIT",
+  "license_file": "LICENSE",
+  "license_sha256": "7be24ef71faad6b0bb6cbb9cbc3e53d48e896bf8730471225a69a06dba264ab9",
+  "notice_files": [],
+  "copyright_lines": [
+   "Copyright (c) 2018 BinSentry"
+  ]
+ },
+ "test_script": "NODE_ENV=test mocha --opts .mocha.opts",
+ "runtime_choice": {
+  "line": "8",
+  "rule": "long-term-support line at last commit date 2018-08-25"
+ },
+ "runtime": {
+  "line": "8",
+  "version": "8.17.0",
+  "file": "node-v8.17.0-linux-x64.tar.gz",
+  "source": "https://nodejs.org/dist/v8.17.0/node-v8.17.0-linux-x64.tar.gz",
+  "checksum_source": "https://nodejs.org/dist/v8.17.0/SHASUMS256.txt",
+  "expected_sha256": "8b2c9e1f84317c4b02736c4c50db4dd2cd6c4f0ba910fa81f887c8c9294af596",
+  "actual_sha256": "8b2c9e1f84317c4b02736c4c50db4dd2cd6c4f0ba910fa81f887c8c9294af596",
+  "verification": "verified",
+  "verified": true,
+  "reports": "v8.17.0"
+ },
+ "install": {
+  "lock_file": null,
+  "method": "as of commit date",
+  "packages": 36,
+  "without_integrity": 0,
+  "install_scripts_skipped": 0,
+  "non_registry": 0
+ },
+ "historical_runs": [
+  {
+   "test_script_exit": 0,
+   "structured": true,
+   "passes": 10,
+   "failures": 0
+  },
+  {
+   "test_script_exit": 0,
+   "structured": true,
+   "passes": 10,
+   "failures": 0
+  }
+ ],
+ "stable_passing_tests": 10,
+ "level": "H2",
+ "today": {
+  "runtime": "v26.13.1",
+  "install_exit": 0,
+  "test_exit": 0,
+  "broken_today": false
+ },
+ "finished": "2026-11-13T15:19:27.843Z"
+}

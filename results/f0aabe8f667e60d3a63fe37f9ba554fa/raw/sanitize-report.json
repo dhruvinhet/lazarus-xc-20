@@ -1,0 +1,106 @@
+{
+ "v": 1,
+ "status": "ok",
+ "limits": {
+  "maxEntries": 64,
+  "jsonMax": 524288,
+  "logMax": 1048576,
+  "textMax": 4096,
+  "totalMax": 4194304,
+  "reportMax": 262144
+ },
+ "accepted": [
+  {
+   "name": "container.log",
+   "bytes": 0,
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "truncated": false,
+   "source": "meta"
+  },
+  {
+   "name": "docker-version.txt",
+   "bytes": 37,
+   "sha256": "1798492bf534ca1048cd5e8ce744dc0bb9601c944a12372ca688be47cbff0949",
+   "truncated": false,
+   "source": "meta"
+  },
+  {
+   "name": "node-image-digest.txt",
+   "bytes": 77,
+   "sha256": "77a184a24ed87f6ad5d3c28b46365e88d05fd0df450c6f55e2ebfc7ae4b097b8",
+   "truncated": false,
+   "source": "meta"
+  },
+  {
+   "name": "node-image.txt",
+   "bytes": 22,
+   "sha256": "04c09ec1699f1a45a97b1622481ee12deb4ba4958da81bb14954d9b50c276eb9",
+   "truncated": false,
+   "source": "meta"
+  },
+  {
+   "name": "baseline-passing-tests.json",
+   "bytes": 432,
+   "sha256": "3eeb49fd32a6cc2d812da24677eec981f4c31f314d259557f858e9df07eb222d",
+   "truncated": false,
+   "source": "out"
+  },
+  {
+   "name": "historical-mocha-json-1.log",
+   "bytes": 4009,
+   "sha256": "d6f97a8d10c2a801b97db2ebca226bd5a3ad1aca93f8bc24e58f5071775577c9",
+   "truncated": false,
+   "source": "out"
+  },
+  {
+   "name": "historical-mocha-json-2.log",
+   "bytes": 4009,
+   "sha256": "dbbc42f6f5e1dc691d820bd5c97d04dd6a97d7092caf73325dd348b15385247b",
+   "truncated": false,
+   "source": "out"
+  },
+  {
+   "name": "historical-test-1.log",
+   "bytes": 495,
+   "sha256": "31ff62e31494384150f74a5699c97c19e9da881dd14ad1ede2eb090bcc45439c",
+   "truncated": false,
+   "source": "out"
+  },
+  {
+   "name": "historical-test-2.log",
+   "bytes": 495,
+   "sha256": "5ce51b427e140421f4ed5cde66b4dc5834b33bc4e66d40a6f6c737318e53ac11",
+   "truncated": false,
+   "source": "out"
+  },
+  {
+   "name": "historical.json",
+   "bytes": 2249,
+   "sha256": "46ccfae9628c20d3b08c3556d15d882a65fecbad86976330c32ae794a972b30f",
+   "truncated": false,
+   "source": "out"
+  },
+  {
+   "name": "install-asof.log",
+   "bytes": 179,
+   "sha256": "79153c9f1dce7d7291c642a15423910825f85eb423ca6837b004e97013a1e86b",
+   "truncated": false,
+   "source": "out"
+  },
+  {
+   "name": "today-install.log",
+   "bytes": 144,
+   "sha256": "d5284d5e002eb16c8cfb41f28ee569c1c53ac611feda5a159a5a197f3f4402ef",
+   "truncated": false,
+   "source": "out"
+  },
+  {
+   "name": "today-test.log",
+   "bytes": 494,
+   "sha256": "174c76f8904eac9140e1b5f3f2ce150636e5691f38234d438b7ede8f45307d96",
+   "truncated": false,
+   "source": "out"
+  }
+ ],
+ "rejected": []
+}

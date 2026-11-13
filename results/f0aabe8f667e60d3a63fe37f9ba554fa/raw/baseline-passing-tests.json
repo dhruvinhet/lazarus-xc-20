@@ -1,0 +1,12 @@
+[
+ "joi-siren converts a single text field",
+ "joi-siren converts numbers",
+ "joi-siren converts booleans",
+ "joi-siren converts multiple fields",
+ "joi-siren converts nested fields",
+ "joi-siren converts nested fanout",
+ "joi-siren converts varying levels of nesting",
+ "joi-siren converts a single field with description",
+ "joi-siren converts a field with an exact value",
+ "joi-siren errors if root of schema is not an object"
+]

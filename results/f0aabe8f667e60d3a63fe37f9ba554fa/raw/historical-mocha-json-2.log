@@ -1,0 +1,163 @@
+$ mocha --reporter json 
+[exit 0 signal  147ms]
+--- stdout
+{
+  "stats": {
+    "suites": 1,
+    "tests": 10,
+    "passes": 10,
+    "pending": 0,
+    "failures": 0,
+    "start": "2026-11-13T15:19:27.201Z",
+    "end": "2026-11-13T15:19:27.209Z",
+    "duration": 8
+  },
+  "tests": [
+    {
+      "title": "converts a single text field",
+      "fullTitle": "joi-siren converts a single text field",
+      "duration": 2,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts numbers",
+      "fullTitle": "joi-siren converts numbers",
+      "duration": 0,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts booleans",
+      "fullTitle": "joi-siren converts booleans",
+      "duration": 1,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts multiple fields",
+      "fullTitle": "joi-siren converts multiple fields",
+      "duration": 0,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts nested fields",
+      "fullTitle": "joi-siren converts nested fields",
+      "duration": 0,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts nested fanout",
+      "fullTitle": "joi-siren converts nested fanout",
+      "duration": 1,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts varying levels of nesting",
+      "fullTitle": "joi-siren converts varying levels of nesting",
+      "duration": 0,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts a single field with description",
+      "fullTitle": "joi-siren converts a single field with description",
+      "duration": 0,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts a field with an exact value",
+      "fullTitle": "joi-siren converts a field with an exact value",
+      "duration": 1,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "errors if root of schema is not an object",
+      "fullTitle": "joi-siren errors if root of schema is not an object",
+      "duration": 0,
+      "currentRetry": 0,
+      "err": {}
+    }
+  ],
+  "pending": [],
+  "failures": [],
+  "passes": [
+    {
+      "title": "converts a single text field",
+      "fullTitle": "joi-siren converts a single text field",
+      "duration": 2,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts numbers",
+      "fullTitle": "joi-siren converts numbers",
+      "duration": 0,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts booleans",
+      "fullTitle": "joi-siren converts booleans",
+      "duration": 1,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts multiple fields",
+      "fullTitle": "joi-siren converts multiple fields",
+      "duration": 0,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts nested fields",
+      "fullTitle": "joi-siren converts nested fields",
+      "duration": 0,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts nested fanout",
+      "fullTitle": "joi-siren converts nested fanout",
+      "duration": 1,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts varying levels of nesting",
+      "fullTitle": "joi-siren converts varying levels of nesting",
+      "duration": 0,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts a single field with description",
+      "fullTitle": "joi-siren converts a single field with description",
+      "duration": 0,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "converts a field with an exact value",
+      "fullTitle": "joi-siren converts a field with an exact value",
+      "duration": 1,
+      "currentRetry": 0,
+      "err": {}
+    },
+    {
+      "title": "errors if root of schema is not an object",
+      "fullTitle": "joi-siren errors if root of schema is not an object",
+      "duration": 0,
+      "currentRetry": 0,
+      "err": {}
+    }
+  ]
+}
+--- stderr
+
